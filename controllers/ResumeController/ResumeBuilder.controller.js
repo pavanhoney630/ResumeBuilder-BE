@@ -36,9 +36,10 @@ const createResume = async (req, res, next) => {
     }
 
     await resume.save();
-    res.status(201).json({ success: true, data: resume });
+    res.status(201).json({ success: true, message:"Resume Created successfully",data: resume });
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to create Resume" });
   }
 };
 
@@ -57,9 +58,10 @@ const getCurrentResume = async (req, res, next) => {
 
     const current = resume.versions.find((v) => v.version === resume.currentVersion);
 
-    res.json({ success: true, data: { ...resume.toObject(), currentVersion: current } });
+    res.json({ success: true, message:"Resume version fetched successfully ",data: { ...resume.toObject(), currentVersion: current } });
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to fetch Resume version" });
   }
 };
 
@@ -88,6 +90,7 @@ const getResumeVersions = async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to fetch Resume versions" });
   }
 };
 
@@ -117,15 +120,14 @@ const updateResume = async (req, res, next) => {
 
     await resume.save();
 
-    res.status(200).json({ success: true, data: resume });
+    res.status(200).json({ success: true,message:"Failed to update Resume", data: resume });
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to update Resume" });
   }
 };
 
 
-
-// Download resume PDF
 // Download specific resume version as PDF
 const downloadResumePdf = async (req, res, next) => {
   try {
@@ -147,7 +149,7 @@ const downloadResumePdf = async (req, res, next) => {
 
     const pdfBuffer = await generatePdfBuffer(selectedVersion);
 
-    res.set({
+    res.status(200).json({success:true,message:"Resume downloaded successfully"}).set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=resume_v${selectedVersion.version}.pdf`,
     });
@@ -155,10 +157,11 @@ const downloadResumePdf = async (req, res, next) => {
     res.send(pdfBuffer);
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to download Resume PDF" });
   }
 };
 
-// Delete resume (entire resume with all versions)
+
 // Delete a specific resume version
 const deleteResumeVersion = async (req, res, next) => {
   try {
@@ -195,6 +198,7 @@ const deleteResumeVersion = async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+    res.status(500).json({ success: false, message: "Failed to delete Resume version" });
   }
 };
 
