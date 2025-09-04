@@ -93,7 +93,6 @@ const getResumeVersions = async (req, res, next) => {
 
 
 
-
 const updateResume = async (req, res, next) => {
   try {
     const { resumeId } = req.params;  // <--- use this
@@ -159,6 +158,47 @@ const downloadResumePdf = async (req, res, next) => {
   }
 };
 
+// Delete resume (entire resume with all versions)
+// Delete a specific resume version
+const deleteResumeVersion = async (req, res, next) => {
+  try {
+    const { resumeId, versionNum } = req.params;
+
+    if (!resumeId || !versionNum) {
+      return res.status(400).json({ success: false, message: "resumeId and versionNum are required" });
+    }
+
+    const resume = await Resume.findById(resumeId);
+    if (!resume) {
+      return res.status(404).json({ success: false, message: "Resume not found" });
+    }
+
+    const versionIndex = resume.versions.findIndex(v => v.version === Number(versionNum));
+    if (versionIndex === -1) {
+      return res.status(404).json({ success: false, message: "Version not found" });
+    }
+
+    // Remove the version
+    resume.versions.splice(versionIndex, 1);
+
+    // If deleted version was the current version, set currentVersion to the latest version
+    if (resume.currentVersion === Number(versionNum)) {
+      const latestVersion = Math.max(...resume.versions.map(v => v.version));
+      resume.currentVersion = latestVersion || 0; // 0 if no versions left
+    }
+
+    await resume.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Version ${versionNum} deleted successfully`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 
 
 
@@ -168,5 +208,6 @@ module.exports = {
     getCurrentResume,
     getResumeVersions,
     updateResume,
-    downloadResumePdf
+    downloadResumePdf,
+    deleteResumeVersion
 };

@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const {authToken} = require("../../middlewares/Auth.middleware");
-const {createResume,getCurrentResume,getResumeVersions,updateResume,downloadResumePdf} = require("../../controllers/ResumeController/ResumeBuilder.controller");
+const {createResume,getCurrentResume,getResumeVersions,updateResume,downloadResumePdf,deleteResumeVersion} = require("../../controllers/ResumeController/ResumeBuilder.controller");
 
 // Create resume
 router.post("/create", authToken, createResume);
@@ -18,5 +18,8 @@ router.put("/update/:resumeId", authToken, updateResume);
 
 // Download resume PDF
 router.get("/download/:resumeId/:versionNum", authToken, downloadResumePdf);
+
+// Delete a specific version
+router.delete("/delete/:resumeId/:versionNum", authToken, deleteResumeVersion);
 
 module.exports = router;
