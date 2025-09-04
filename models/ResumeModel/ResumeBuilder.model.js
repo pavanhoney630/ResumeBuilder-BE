@@ -40,7 +40,7 @@ const ResumeVersionSchema = new mongoose.Schema(
     skills: [{ type: String, trim: true }],
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const ResumeSchema = new mongoose.Schema(

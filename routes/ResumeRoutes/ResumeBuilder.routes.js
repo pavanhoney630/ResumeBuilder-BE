@@ -8,7 +8,7 @@ const {createResume,getCurrentResume,getResumeVersions,updateResume,downloadResu
 router.post("/create", authToken, createResume);
 
 // Get current resume
-router.get("/current/:userId", authToken, getCurrentResume);
+router.get("/current/:resumeId", authToken, getCurrentResume);
 
 // Get all versions
 router.get("/versions/:userId", authToken, getResumeVersions);

@@ -45,16 +45,24 @@ const createResume = async (req, res, next) => {
 // Get current resume
 const getCurrentResume = async (req, res, next) => {
   try {
-    const {userId} = req.params
-    const resume = await Resume.findOne({ user: userId });
-    if (!resume) return res.status(404).json({ success: false, message: "Resume not found" });
+    const { resumeId } = req.params; // should match :resumeId in route
+    if (!resumeId) {
+      return res.status(400).json({ success: false, message: "resumeId is required" });
+    }
 
-    const current = resume.versions.find(v => v.version === resume.currentVersion);
-    res.json({ success: true, data: current });
+    const resume = await Resume.findById(resumeId);
+
+    if (!resume)
+      return res.status(404).json({ success: false, message: "Resume not found" });
+
+    const current = resume.versions.find((v) => v.version === resume.currentVersion);
+
+    res.json({ success: true, data: { ...resume.toObject(), currentVersion: current } });
   } catch (err) {
     next(err);
   }
 };
+
 
 // Get all versions
 const getResumeVersions = async (req, res, next) => {
@@ -66,9 +74,10 @@ const getResumeVersions = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Resume not found" });
     }
 
-    // Add download link for each version
+    // Add _id and download link for each version
     const versionsWithLinks = resume.versions.map((v) => ({
       ...v.toObject(), // convert Mongoose subdoc to plain object
+      resumeId: resume._id, // add parent resume _id
       downloadLink: `${req.protocol}://${req.get("host")}/api/resume/download/${resume._id}/${v.version}`,
     }));
 
@@ -84,25 +93,24 @@ const getResumeVersions = async (req, res, next) => {
 
 
 
+
 const updateResume = async (req, res, next) => {
   try {
+    const { resumeId } = req.params;  // <--- use this
     const { personal, education, experience, skills } = req.body;
 
-    let resume = await Resume.findOne({ user: req.user.id });
+    let resume = await Resume.findById(resumeId);  // <--- find by resumeId
     if (!resume) {
       return res.status(404).json({ success: false, message: "Resume not found" });
     }
 
-    // find the latest version (by currentVersion number)
     const currentVersion = resume.versions.find(
       (v) => v.version === resume.currentVersion
     );
-
     if (!currentVersion) {
       return res.status(404).json({ success: false, message: "Current version not found" });
     }
 
-    // update fields (only overwrite what was passed in req.body)
     if (personal) currentVersion.personal = personal;
     if (education) currentVersion.education = education;
     if (experience) currentVersion.experience = experience;
@@ -115,6 +123,7 @@ const updateResume = async (req, res, next) => {
     next(err);
   }
 };
+
 
 
 // Download resume PDF
